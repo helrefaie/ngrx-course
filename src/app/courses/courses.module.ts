@@ -22,24 +22,43 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {RouterModule, Routes} from '@angular/router';
 import { EntityDataService, EntityDefinitionService, EntityMetadataMap} from '@ngrx/data';
-import {compareCourses, Course} from './model/course';
-
-import {compareLessons, Lesson} from './model/lesson';
+import {compareCourses} from './model/course';
+import {compareLessons} from './model/lesson';
+import { CourseEntityService } from './services/course-entity.service';
+import { CoursesResolver } from './services/courses.resolver';
+import { CoursesDataService } from './services/courses-data.service';
+import { LessonEntityService } from './services/lesson-entity.service';
 
 
 export const coursesRoutes: Routes = [
   {
     path: '',
-    component: HomeComponent
+    component: HomeComponent,
+    resolve: {
+      courses: CoursesResolver
+    }
 
   },
   {
     path: ':courseUrl',
-    component: CourseComponent
+    component: CourseComponent,
+    resolve: {
+      courses: CoursesResolver
+    }
   }
 ];
 
-
+const entityMetadata: EntityMetadataMap ={
+  Course: {
+    sortComparer: compareCourses,
+    entityDispatcherOptions:{
+      optimisticUpdate: true
+    }
+  },
+  Lesson: {
+    sortComparer: compareLessons
+  }
+}
 @NgModule({
   imports: [
     CommonModule,
@@ -74,13 +93,21 @@ export const coursesRoutes: Routes = [
   ],
   entryComponents: [EditCourseDialogComponent],
   providers: [
-    CoursesHttpService
+    CoursesHttpService,
+    CourseEntityService,
+    LessonEntityService,
+    CoursesResolver,
+    CoursesDataService
   ]
 })
 export class CoursesModule {
 
-  constructor() {
-
+  constructor(
+    private eds:EntityDefinitionService,
+    private entityDataService: EntityDataService,
+    private coursesDataServices:CoursesDataService) {
+    eds.registerMetadataMap(entityMetadata);
+    entityDataService.registerService('Course', coursesDataServices);
   }
 
 

@@ -1,9 +1,7 @@
-import { logout } from './auth/auth.actions';
-import {Component, OnInit} from '@angular/core';
-import {select, Store} from "@ngrx/store";
-import {Observable} from "rxjs";
-import {map} from 'rxjs/operators';
-import {NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router} from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { select, Store } from "@ngrx/store";
+import { Observable } from "rxjs";
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 import { AppState } from './reducers';
 import { isLoggedIn, isLoggedOut } from './auth/auth.selectors';
 import { AuthActions } from './auth/action-types';
@@ -15,67 +13,50 @@ import { AuthActions } from './auth/action-types';
 })
 export class AppComponent implements OnInit {
 
-    loading = true;
-    
-    isLoggedIn$: Observable<boolean>;
-    isLoggedOut$: Observable<boolean>;
+  loading = true;
+
+  isLoggedIn$: Observable<boolean>;
+  isLoggedOut$: Observable<boolean>;
 
 
-    constructor(private router: Router, private store:Store<AppState>) {
+  constructor(private router: Router, private store: Store<AppState>) {
+  }
 
+  ngOnInit() {
+    const userProfile = localStorage.getItem("user");
+    if (userProfile) {
+      this.store.dispatch(AuthActions.login({ user: JSON.parse(userProfile) }));
     }
-
-    ngOnInit() {
-      const userProfile=localStorage.getItem("user");
-      if(userProfile){
-        this.store.dispatch(AuthActions.login({user: JSON.parse(userProfile)}));
-      }
-      this.router.events.subscribe(event  => {
-        switch (true) {
-          case event instanceof NavigationStart: {
-            this.loading = true;
-            break;
-          }
-
-          case event instanceof NavigationEnd:
-          case event instanceof NavigationCancel:
-          case event instanceof NavigationError: {
-            this.loading = false;
-            break;
-          }
-          default: {
-            break;
-          }
+    this.router.events.subscribe(event => {
+      switch (true) {
+        case event instanceof NavigationStart: {
+          this.loading = true;
+          break;
         }
-      });
 
-
-      //NgRx Select Operator
-      this.isLoggedIn$= this.store
+        case event instanceof NavigationEnd:
+        case event instanceof NavigationCancel:
+        case event instanceof NavigationError: {
+          this.loading = false;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    });
+    this.isLoggedIn$ = this.store
       .pipe(
-        select (isLoggedIn)
+        select(isLoggedIn)
       );
-      this.isLoggedOut$= this.store
+    this.isLoggedOut$ = this.store
       .pipe(
-        select (isLoggedOut)
+        select(isLoggedOut)
       );
+  }
 
-      //Observable query
-      // this.isLoggedIn$= this.store
-      // .pipe(
-      //   map ( state => !!state["auth"].user)
-      // );
-      // this.isLoggedOut$= this.store
-      // .pipe(
-      //   map ( state => !state["auth"].user)
-      // );
-
-    }
-
-    logout() {
-    
-          this.store.dispatch(AuthActions.logout());
-        
-    }
+  logout() {
+    this.store.dispatch(AuthActions.logout());
+  }
 
 }
